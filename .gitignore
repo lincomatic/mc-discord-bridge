@@ -1,4 +1,10 @@
 # Byte-compiled / optimized / DLL files
+#*#
+*~
+config.ini
+.vscode/*
+Scripts/*
+pyvenv.cfg
 __pycache__/
 *.py[codz]
 *$py.class
