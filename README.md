@@ -1,18 +1,8 @@
-# msgbot
+# mc-discord-bridge
 A bridge between MeshCore and Discord.
 
 ## Configuration (config.ini) 🔧
-The application reads configuration from `config.ini` (section `[bot]`). If a value is missing in `config.ini`, the program falls back to environment variables.
-
-Create `config.ini` from `config.ini.example` and set your values (do **not** commit `config.ini` — it's ignored by `.gitignore`).
-
-Example `config.ini` keys (in section `[bot]`):
-- `DEBUG_MESH` — `True`/`False` (skip posting to Discord when `True`)
-- `MESHCORE_HOSTNAME` — MeshCore hostname or IP
-- `PORT` — port for MeshCore (default `5000`)
-- `DISCORD_WEBHOOK_URL` — optional webhook to post messages
-- `MSGBOT_TOKEN` — Discord bot token (required)
-- `DISCORD_CHANNEL_ID` — numeric channel ID where bot listens
+Create `config.ini` from `config.ini.example` and set your own values.
 
 ## Getting a Discord bot token 🔑
 1. Go to the Discord Developer Portal: `https://discord.com/developers/applications`.
@@ -30,10 +20,34 @@ Example `config.ini` keys (in section `[bot]`):
 2. Start the bot as usual (it will read `config.ini` automatically):
 
 ```bash
-python msgbot.py
+python mc-discord-bridge.py
 ```
 
 If `MSGBOT_TOKEN` is missing the program will exit with an error.
 
 ## Security note ⚠️
 Keep `config.ini` out of version control because it may contain secrets (bot token). The repo provides `config.ini.example` as a template.
+
+## Sending mesh messages to Discord: channel vs DM
+
+- **To send a direct message (DM) to a Discord user**: send a mesh message that targets a DM in one of the supported formats. The bot recognizes:
+	- `$name: message` — target by configured `name` followed by `:`
+      e.g. `$meshuser: hello`.
+
+	The `name` used for DM routing is looked up in the `[discord_dm_userids]` section of `config.ini` (keys are names, values are numeric Discord user IDs). Example:
+
+	```ini
+	[discord_dm_userids]
+	alice = 123456789012345678
+	bob = 987654321098765432
+	```
+
+	If a match is found, the bot will send the remainder of the mesh message (with `meshuser:` prefixed if present) as a DM to the corresponding Discord user.
+
+- **To send to the configured Discord channel**: Post a message from mesh in the monitored MeshCore channel (configured via `CHNL_NAME_MESH`) and the bot will forward it to the Discord channel. Just make sure that the message doesn't start with the `$` character, or it will be interpreted as a DM
+
+
+Notes and caveats:
+- The bot only accepts DMs to users configured in `[discord_dm_userids]`.
+- Names in the config are matched case-insensitively against the `name` token in the mesh message.
+- Make sure the bot is invited to your server and has permission to send DMs (users can disable DMs from server members).
